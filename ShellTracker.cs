@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace BuckshotRoulette_ShellTracker {
@@ -65,8 +66,7 @@ namespace BuckshotRoulette_ShellTracker {
                 }
 
                 allShellsIn = true;
-                bool userContinue = true;
-                int burnerShellTurns = -1;
+                string burnerShellTurns = "";
                 string burnerShellText = "";
 
                 // While a shell is in, shows this menu
@@ -79,24 +79,27 @@ namespace BuckshotRoulette_ShellTracker {
                     Console.WriteLine("[P] Burner Phone");
                     Console.WriteLine("[R] End tracking\n");
 
-                    if (!burnerShellText.Equals("") && burnerShellTurns != -1) {
-                        if (burnerShellTurns == 1) {
-                            burnerShellText = "NOW";
-                            burnerShellTurns = 0;
-                        } else {
-                            burnerShellTurns--;
-                        }
-                        Console.WriteLine($"{burnerShellText} > {burnerShellTurns}");
+                    if (!burnerShellText.Equals("") && !burnerShellTurns.Equals("")) {
+                        if (burnerShellTurns.Equals("1")) // If turns until shell is 1, changes text to NOW
+                            burnerShellTurns = "NOW";
+                        else if (burnerShellTurns.Equals("NOW")) { // After the turn, reset to defaults
+                            burnerShellTurns = "";
+                            burnerShellText = "";
+                        } else // Reduces value in turns
+                            burnerShellTurns = Convert.ToString(Convert.ToInt32(burnerShellTurns) - 1);
+
+                        if (!burnerShellText.Equals("") && !burnerShellTurns.Equals("")) // Shows text if conditions met
+                            Console.WriteLine($"{burnerShellText} > {burnerShellTurns}");
                     }
 
                     char shellMenuOption = Console.ReadKey().KeyChar; // Option Input
                     switch (shellMenuOption) {
                         case 'L': case 'l': // Live shell goes out
-                            if (liveShells > 0) { liveShells--; }
+                            if (liveShells > 0) liveShells--;
                             break;
 
                         case 'B': case 'b': // Blank shell goes out
-                            if (blankShells > 0) { blankShells--; }
+                            if (blankShells > 0) blankShells--;
                             break;
 
                         case 'S': case 's': // Shell was polarized
@@ -115,7 +118,7 @@ namespace BuckshotRoulette_ShellTracker {
                             break;
 
                         case 'P': case 'p': // Burner phone info
-                            if (liveShells + blankShells > 3) {
+                            if (liveShells + blankShells >= 3) {
                                 ShellStatus();
                                 Console.WriteLine("\n- BURNER PHONE -");
                                 Console.WriteLine("[L] Warns Live Shell");
@@ -134,18 +137,16 @@ namespace BuckshotRoulette_ShellTracker {
                                 while (!properInput) {
                                     ShellStatus();
                                     Console.WriteLine("\n- BURNER PHONE -");
-                                    Console.WriteLine("[Nº] Distance to Shell");
+                                    Console.WriteLine("[Nº] Which Shell?");
                                     char charBurnerShellTurns = Console.ReadKey().KeyChar;
 
                                     if (Char.IsNumber(charBurnerShellTurns)) {
                                         int convertedNumber = Convert.ToInt32(charBurnerShellTurns.ToString());
                                         if (convertedNumber <= (liveShells + blankShells)) {
-                                            burnerShellTurns = Convert.ToInt32(charBurnerShellTurns.ToString());
+                                            burnerShellTurns = charBurnerShellTurns.ToString();
                                             properInput = true;
-                                        } else {
+                                        } else 
                                             ColoredMessage("Shell out of range.", ConsoleColor.Red);
-                                        }
-                                        burnerShellTurns = Convert.ToInt32(charBurnerShellTurns.ToString());
                                     } else {
                                         ColoredMessage("Value was not a number.", ConsoleColor.Red);
                                     }
@@ -157,11 +158,6 @@ namespace BuckshotRoulette_ShellTracker {
                         case 'R': case 'r': // User chooses to reset
                             liveShells = blankShells = 0;
                             userReset = true;
-                            break;
-
-                        default:
-                            ColoredMessage("Option unavailable.", ConsoleColor.Red);
-                            System.Environment.Exit(0);
                             break;
                     }
                 }
